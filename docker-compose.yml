@@ -1,0 +1,39 @@
+services:
+  zookeeper:
+    image: wurstmeister/zookeeper
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: wurstmeister/kafka
+    container_name: kafka
+    ports:
+      - "9093:9093"
+    environment:
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9093
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true' 
+
+    depends_on:
+      - zookeeper
+
+  backend:
+    build:
+      context: ./real-time-order-processing-backend
+    container_name: backend
+    ports:
+      - "5001:5001"
+    depends_on:
+      - kafka
+
+  frontend:
+    build:
+      context: ./real-time-order-processing-frontend
+    container_name: frontend
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
